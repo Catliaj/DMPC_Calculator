@@ -93,7 +93,7 @@ class ProbabilityCalculator:
 
 
         # Exit Button
-        self.exit_button = tk.Button(self.panel2, text="Exit", command=root.quit,  font=("Arial", 10, "bold"), fg="black")
+        self.exit_button = tk.Button(self.panel2, text="Exit", command=self.exit_application,  font=("Arial", 10, "bold"), fg="black")
         self.exit_button.place(x=66, y=556, width=120)
 
 
@@ -300,6 +300,14 @@ class ProbabilityCalculator:
         if selection == "Combinatorics Calculator":
             self.root.destroy()
             main(CombinatoricsCalculator)
+    def exit_application(self):
+        # Confirm exit action with the user
+        confirm = messagebox.askyesno(
+            "Exit Application",
+            "Are you sure you want to exit the application?"
+        )
+        if confirm:
+            self.root.destroy()
 
 
 
@@ -340,6 +348,9 @@ class CombinatoricsCalculator:
         # Panel 2: Left Side Panel---------------------------------------------------------------------- 
         self.panel2 = tk.Frame(root, width=254, height=605, bg="#919191")
         self.panel2.place(x=8, y=120)
+        
+
+
 
         # History Label
         history_label = tk.Label(
@@ -389,8 +400,12 @@ class CombinatoricsCalculator:
         self.calculator_switch.place(x=10, y=15, width=230, height=50)
 
         # Exit Button
-        self.exit_button = tk.Button(self.panel2, text="Exit", command=root.quit, font=("Arial", 10, "bold"), fg="black")
-        self.exit_button.place(x=66, y=556, width=120)
+        self.exit_button = tk.Button(self.panel2, text="Exit", command=self.exit_application, font=("Arial", 10, "bold"), fg="black")
+        self.exit_button.place(x=66, y=540, width=120)
+        
+        # Adding a Clear History button
+        self.clear_history_button = tk.Button(self.panel2, text="Clear History", command=self.clear_history, font=("Arial", 10, "bold"), fg="black", bg="#d9534f")
+        self.clear_history_button.place(x=66, y=570, width=120)
 
         # Panel 3: Inputs Panel---------------------------------------------------------------------- 
         self.panel3 = tk.Frame(root, width=427, height=295, bg="#630606")  # Increased height of the panel
@@ -462,6 +477,8 @@ class CombinatoricsCalculator:
 
         self.ncr_result = tk.Entry(self.panel4, bg="white", fg="black", font=("Arial", 14))
         self.ncr_result.place(relx=0.5, rely=0.7, anchor="center", width=300)
+        
+        
 
     def center_window(self):
         window_width = 705
@@ -538,6 +555,38 @@ class CombinatoricsCalculator:
             self.root.destroy()
             main(ProbabilityCalculator)
             
+    def clear_history(self):     
+    # Confirm action with the user
+        confirm = messagebox.askyesno(
+            "Confirm Deletion",
+            "Are you sure you want to clear all history? This action cannot be undone."
+        )
+        if confirm:
+            try:
+                # Delete all records from the database
+                delete_query = "DELETE FROM combinatronics_history"
+                self.db_cursor.execute(delete_query)
+                self.db_connection.commit()
+
+                # Clear the scrollable pane
+                for widget in self.inner_frame.winfo_children():
+                    widget.destroy()
+
+                messagebox.showinfo("Success", "All history has been cleared.")
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to clear history: {e}")
+                
+    def exit_application(self):
+        # Confirm exit action with the user
+        confirm = messagebox.askyesno(
+            "Exit Application",
+            "Are you sure you want to exit the application?"
+        )
+        if confirm:
+            self.root.destroy()
+
+
+    
 
 
 
