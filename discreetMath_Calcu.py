@@ -93,8 +93,12 @@ class ProbabilityCalculator:
 
 
         # Exit Button
-        self.exit_button = tk.Button(self.panel2, text="Exit", command=self.exit_application,  font=("Arial", 10, "bold"), fg="black")
-        self.exit_button.place(x=66, y=556, width=120)
+        self.exit_button = tk.Button(self.panel2, text="Exit", command=self.exit_application, font=("Arial", 10, "bold"), fg="black")
+        self.exit_button.place(x=66, y=540, width=120)
+        
+        # Adding a Clear History button
+        self.clear_history_button = tk.Button(self.panel2, text="Clear History", command=self.clear_history, font=("Arial", 10, "bold"), fg="black", bg="#d9534f")
+        self.clear_history_button.place(x=66, y=570, width=120)
 
 
 
@@ -284,6 +288,26 @@ class ProbabilityCalculator:
         except ValueError:
             messagebox.showerror("Invalid Input", "Please enter valid numbers.")
 
+    def clear_history(self):
+        confirm = messagebox.askyesno(
+            "Confirm Deletion",
+            "Are you sure you want to clear all history? This action cannot be undone."
+        )
+        if confirm:
+            try:
+                # Delete all records from the database
+                delete_query = "DELETE FROM probability_history"
+                self.db_cursor.execute(delete_query)
+                self.db_connection.commit()
+
+                # Clear the scrollable pane
+                for widget in self.inner_frame.winfo_children():
+                    widget.destroy()
+
+                messagebox.showinfo("Success", "All history has been cleared.")
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to clear history: {e}")
+
     def clear_fields(self):
         # Clear the input fields and result text fields
         self.entry_total_outcomes.delete(0, tk.END)
@@ -295,11 +319,6 @@ class ProbabilityCalculator:
         self.addition_rule_result.delete(0, tk.END)
         self.multiplication_rule_result.delete(0, tk.END)
 
-    def switch_calculator(self, event):
-        selection = self.calculator_switch.get()
-        if selection == "Combinatorics Calculator":
-            self.root.destroy()
-            main(CombinatoricsCalculator)
     def exit_application(self):
         # Confirm exit action with the user
         confirm = messagebox.askyesno(
@@ -308,6 +327,12 @@ class ProbabilityCalculator:
         )
         if confirm:
             self.root.destroy()
+
+    def switch_calculator(self, event):
+        selection = self.calculator_switch.get()
+        if selection == "Combinatorics Calculator":
+            self.root.destroy()
+            main(CombinatoricsCalculator)
 
 
 
@@ -348,9 +373,6 @@ class CombinatoricsCalculator:
         # Panel 2: Left Side Panel---------------------------------------------------------------------- 
         self.panel2 = tk.Frame(root, width=254, height=605, bg="#919191")
         self.panel2.place(x=8, y=120)
-        
-
-
 
         # History Label
         history_label = tk.Label(
@@ -477,8 +499,6 @@ class CombinatoricsCalculator:
 
         self.ncr_result = tk.Entry(self.panel4, bg="white", fg="black", font=("Arial", 14))
         self.ncr_result.place(relx=0.5, rely=0.7, anchor="center", width=300)
-        
-        
 
     def center_window(self):
         window_width = 705
@@ -503,9 +523,9 @@ class CombinatoricsCalculator:
         for i, row in enumerate(rows):
             tk.Label(self.inner_frame, text=f"(n) = {row[0]}", bg="#fff5f5").pack(anchor="w")
             tk.Label(self.inner_frame, text=f"(r) = {row[1]}", bg="#fff5f5").pack(anchor="w")
-            tk.Label(self.inner_frame, text=f"Factorial = {row[2]:.4f}", bg="#fff5f5").pack(anchor="w")
-            tk.Label(self.inner_frame, text=f"Permutation = {row[3]:.4f}", bg="#fff5f5").pack(anchor="w")
-            tk.Label(self.inner_frame, text=f"Combination = {row[4]:.4f}", bg="#fff5f5").pack(anchor="w")
+            tk.Label(self.inner_frame, text=f"Factorial = {row[2]:.2f}", bg="#fff5f5").pack(anchor="w")
+            tk.Label(self.inner_frame, text=f"Permutation = {row[3]:.2f}", bg="#fff5f5").pack(anchor="w")
+            tk.Label(self.inner_frame, text=f"Combination = {row[4]:.2f}", bg="#fff5f5").pack(anchor="w")
             tk.Label(self.inner_frame, text="-" * 50, bg="#fff5f5").pack(anchor="w")
 
     def calculate_combinatorics(self):
@@ -521,11 +541,14 @@ class CombinatoricsCalculator:
             ncr = math.factorial(n) / (math.factorial(r) * math.factorial(n - r)) if r <= n else 0
 
             # Update result labels
-            self.factorial_label.config(text=f"n! = {n_fact}")
+            self.factorial_result.delete(0, tk.END)
+            self.factorial_result.insert(0, str(round(n_fact,2)))
 
-            self.npr_label.config(text=f"nPr = {npr}")
+            self.npr_result.delete(0, tk.END)
+            self.npr_result.insert(0, str(round(npr,2)))
 
-            self.ncr_label.config(text=f"nCr = {ncr}")
+            self.ncr_result.delete(0, tk.END)
+            self.ncr_result.insert(0, str(round(ncr,2)))
             
         # Insert into the database
             insert_query = """
@@ -541,20 +564,6 @@ class CombinatoricsCalculator:
         except ValueError:
             messagebox.showerror("Invalid Input", "Please enter valid integers.")
 
-    def clear_fields(self):
-        # Clear the input fields and result text fields
-        self.entry_n.delete(0, tk.END)
-        self.entry_r.delete(0, tk.END)
-        self.factorial_result.delete(0, tk.END)
-        self.npr_result.delete(0, tk.END)
-        self.ncr_result.delete(0, tk.END)
-
-    def switch_calculator(self, event):
-        selection = self.calculator_switch.get()
-        if selection == "Probability Calculator":
-            self.root.destroy()
-            main(ProbabilityCalculator)
-            
     def clear_history(self):     
     # Confirm action with the user
         confirm = messagebox.askyesno(
@@ -575,7 +584,15 @@ class CombinatoricsCalculator:
                 messagebox.showinfo("Success", "All history has been cleared.")
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to clear history: {e}")
-                
+
+    def clear_fields(self):
+        # Clear the input fields and result text fields
+        self.entry_n.delete(0, tk.END)
+        self.entry_r.delete(0, tk.END)
+        self.factorial_result.delete(0, tk.END)
+        self.npr_result.delete(0, tk.END)
+        self.ncr_result.delete(0, tk.END)
+
     def exit_application(self):
         # Confirm exit action with the user
         confirm = messagebox.askyesno(
@@ -585,8 +602,12 @@ class CombinatoricsCalculator:
         if confirm:
             self.root.destroy()
 
-
-    
+    def switch_calculator(self, event):
+        selection = self.calculator_switch.get()
+        if selection == "Probability Calculator":
+            self.root.destroy()
+            main(ProbabilityCalculator)
+            
 
 
 
